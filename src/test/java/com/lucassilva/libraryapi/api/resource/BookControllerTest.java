@@ -1,5 +1,7 @@
 package com.lucassilva.libraryapi.api.resource;
 
+import java.util.Optional;
+
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -107,6 +109,56 @@ public class BookControllerTest {
 			.andExpect( MockMvcResultMatchers.status().isBadRequest() )
 			.andExpect( MockMvcResultMatchers.jsonPath("errors", Matchers.hasSize(1)))
 			.andExpect( MockMvcResultMatchers.jsonPath("errors[0]").value("Isbn já cadastrado."));
+	}
+	
+	@Test
+	@DisplayName("Deve obter informações de um livro")
+	public void getBookDetails() throws Exception {
+		
+		//cenário
+		Long id = 1L;
+		
+		Book book = Book.builder()
+						.id(id)
+						.title(createNewBook().getTitle())
+						.author(createNewBook().getAuthor())
+						.isbn(createNewBook().getIsbn())
+						.build();
+		
+		BDDMockito.given(bookService.getById(id)).willReturn(Optional.of(book));
+		
+		//execução
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.get(BOOK_API.concat("/" + id)) 
+				.accept(MediaType.APPLICATION_JSON);
+		
+		mvc
+			.perform(request)
+			.andExpect( MockMvcResultMatchers.status().isOk() )
+			.andExpect( MockMvcResultMatchers.jsonPath("id").value(id) )
+			.andExpect( MockMvcResultMatchers.jsonPath("title").value(createNewBook().getTitle()) )
+			.andExpect( MockMvcResultMatchers.jsonPath("author").value(createNewBook().getAuthor()) )
+			.andExpect( MockMvcResultMatchers.jsonPath("isbn").value(createNewBook().getIsbn()) );
+		
+	}
+	
+	@Test
+	@DisplayName("Deve retornar resource not found quando o livro procurado não existir")
+	public void booknotFoundTest() throws Exception {
+		
+		//cenário
+
+		BDDMockito.given(bookService.getById(Mockito.anyLong())).willReturn(Optional.empty());
+		
+		//execução
+		MockHttpServletRequestBuilder request = MockMvcRequestBuilders
+				.get(BOOK_API.concat("/" + 1)) 
+				.accept(MediaType.APPLICATION_JSON);
+		
+		mvc
+			.perform(request)
+			.andExpect( MockMvcResultMatchers.status().isNotFound() );
+		
 	}
 	
 	private BookDTO createNewBook() {
