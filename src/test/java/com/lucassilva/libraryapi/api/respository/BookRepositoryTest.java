@@ -2,6 +2,8 @@ package com.lucassilva.libraryapi.api.respository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -58,5 +60,59 @@ public class BookRepositoryTest {
 		//verificação
 		assertThat(exists).isFalse();
 	}
+	
+	@Test
+	@DisplayName("Deve obter um livro por ID")
+	public void findByIdTest() {
+		//cenário
+		
+		Book book = Book.builder().title("Aventuras").author("Fulano").isbn("1234").build();
+		
+		entityManager.persist(book);
+		
+		//execução
+		Optional<Book> foundBook = repository.findById(book.getId());
+		
+		//verificação
+		assertThat(foundBook.isPresent()).isTrue();
+	}
+	
+	@Test
+	@DisplayName("Deve salvar um livro")
+	public void saveBookTest() {
+		
+		//cenário
+		Book book = Book.builder().title("Aventuras").author("Fulano").isbn("1234").build();
+		
+		//execução
+		Book savedBook = repository.save(book);
+		
+		//verificação
+		assertThat(savedBook.getId()).isNotNull();
+
+	}
+	
+	@Test
+	@DisplayName("Deve deletar um livro")
+	public void deleteBookTest() {
+		
+		//cenário
+		Book book = Book.builder().title("Aventuras").author("Fulano").isbn("1234").build();
+		
+		entityManager.persist(book);
+		
+		Book foundBook = entityManager.find(Book.class, book.getId());
+		
+		//execução
+		repository.delete(foundBook);
+		
+		//verificação
+		Book deletedBook = entityManager.find(Book.class, book.getId());
+
+		assertThat(deletedBook).isNull();
+		
+	}
+	
+	
 	
 }
